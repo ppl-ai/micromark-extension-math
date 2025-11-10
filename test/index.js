@@ -502,4 +502,64 @@ test('math', async function (t) {
         '</div>\n</blockquote>'
     )
   })
+
+  await t.test(
+    'should support inline math with LaTeX-style delimiters \\( \\)',
+    async function () {
+      assert.equal(
+        micromark('a \\(b\\) c', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>a <span class="math math-inline">' +
+          renderToString('b') +
+          '</span> c</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support display math with LaTeX-style delimiters \\[ \\]',
+    async function () {
+      assert.equal(
+        micromark('\\[\na\n\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support LaTeX-style inline math with complex expressions',
+    async function () {
+      assert.equal(
+        micromark('The formula \\(E = mc^2\\) is famous', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>The formula <span class="math math-inline">' +
+          renderToString('E = mc^2') +
+          '</span> is famous</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support LaTeX-style display math with multiple lines',
+    async function () {
+      assert.equal(
+        micromark('\\[\n\\frac{1}{2}\n\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('\\frac{1}{2}', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
 })
