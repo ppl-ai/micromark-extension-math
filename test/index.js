@@ -562,4 +562,88 @@ test('math', async function (t) {
       )
     }
   )
+
+  await t.test(
+    'should support an escaped backslash before inline math (text) delimiter',
+    async function () {
+      assert.equal(
+        micromark('a \\\\(b\\) c', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>a \\(b) c</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support an escaped backslash before display math delimiter',
+    async function () {
+      assert.equal(
+        micromark('\\\\[\na\n\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>\\[\na\n]</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support math (text) with LaTeX delimiters right after an escaped backslash',
+    async function () {
+      assert.equal(
+        micromark('a \\\\\\(b\\) c', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>a \\<span class="math math-inline">' +
+          renderToString('b') +
+          '</span> c</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should not support LaTeX-style inline math with only opening delimiter',
+    async function () {
+      assert.equal(
+        micromark('a \\(b c', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>a (b c</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support LaTeX-style display math w/o closing fence',
+    async function () {
+      assert.equal(
+        micromark('\\[\na', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support LaTeX-style display math w/o closing fence ending at an EOL',
+    async function () {
+      assert.equal(
+        micromark('\\[\na\n', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
 })
