@@ -56,7 +56,6 @@ declare module 'micromark-util-types' {
     mathFlowValue: 'mathFlowValue'
     mathText: 'mathText'
     mathTextData: 'mathTextData'
-    mathTextDisplay: 'mathTextDisplay'
     mathTextPadding: 'mathTextPadding'
     mathTextSequence: 'mathTextSequence'
   }

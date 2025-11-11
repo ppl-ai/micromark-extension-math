@@ -693,45 +693,45 @@ test('math', async function (t) {
   )
 
   await t.test(
-    'should support inline display math with LaTeX-style delimiters \\[ \\]',
+    'should support inline math with LaTeX-style delimiters \\[ \\]',
     async function () {
       assert.equal(
         micromark('a \\[b\\] c', {
           extensions: [math()],
           htmlExtensions: [mathHtml()]
         }),
-        '<p>a <span class="math math-display">' +
-          renderToString('b', {displayMode: true}) +
+        '<p>a <span class="math math-inline">' +
+          renderToString('b', {displayMode: false}) +
           '</span> c</p>'
       )
     }
   )
 
   await t.test(
-    'should support inline display math in table cells',
+    'should support inline math with \\[ \\] in table cells',
     async function () {
       assert.equal(
         micromark('| Column | Formula \\[x^2\\] here |', {
           extensions: [math()],
           htmlExtensions: [mathHtml()]
         }),
-        '<p>| Column | Formula <span class="math math-display">' +
-          renderToString('x^2', {displayMode: true}) +
+        '<p>| Column | Formula <span class="math math-inline">' +
+          renderToString('x^2', {displayMode: false}) +
           '</span> here |</p>'
       )
     }
   )
 
   await t.test(
-    'should support inline display math with complex expressions',
+    'should support inline math with \\[ \\] and complex expressions',
     async function () {
       assert.equal(
         micromark('The formula \\[\\frac{a}{b}\\] is important.', {
           extensions: [math()],
           htmlExtensions: [mathHtml()]
         }),
-        '<p>The formula <span class="math math-display">' +
-          renderToString('\\frac{a}{b}', {displayMode: true}) +
+        '<p>The formula <span class="math math-inline">' +
+          renderToString('\\frac{a}{b}', {displayMode: false}) +
           '</span> is important.</p>'
       )
     }

@@ -23,6 +23,8 @@ function tokenizeMathTextLatex(effects, ok, nok) {
   let token
   /** @type {Token} */
   let openToken
+  /** @type {number} */
+  let openingCode
 
   return start
 
@@ -59,15 +61,8 @@ function tokenizeMathTextLatex(effects, ok, nok) {
    * @type {State}
    */
   function openDelimiter(code) {
-    if (code === codes.leftParenthesis) {
-      effects.consume(code)
-      effects.exit('mathTextSequence')
-      return between
-    }
-
-    if (code === codes.leftSquareBracket) {
-      // Mark as display mode
-      openToken.type = 'mathTextDisplay'
+    if (code === codes.leftParenthesis || code === codes.leftSquareBracket) {
+      openingCode = code
       effects.consume(code)
       effects.exit('mathTextSequence')
       return between
@@ -156,12 +151,12 @@ function tokenizeMathTextLatex(effects, ok, nok) {
    * @type {State}
    */
   function closingBackslash(code) {
-    const isDisplay = openToken.type === 'mathTextDisplay'
+    const expectedClose =
+      openingCode === codes.leftSquareBracket
+        ? codes.rightSquareBracket
+        : codes.rightParenthesis
 
-    if (
-      (isDisplay && code === codes.rightSquareBracket) ||
-      (!isDisplay && code === codes.rightParenthesis)
-    ) {
+    if (code === expectedClose) {
       effects.consume(code)
       effects.exit('mathTextSequence')
       effects.exit(openToken.type)

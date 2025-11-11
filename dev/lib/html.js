@@ -32,10 +32,6 @@ export function mathHtml(options) {
       mathText() {
         this.tag('<span class="math math-inline">')
         this.buffer()
-      },
-      mathTextDisplay() {
-        this.tag('<span class="math math-display">')
-        this.buffer()
       }
     },
     exit: {
@@ -66,11 +62,6 @@ export function mathHtml(options) {
       mathText() {
         const value = this.resume()
         this.tag(math(value, false))
-        this.tag('</span>')
-      },
-      mathTextDisplay() {
-        const value = this.resume()
-        this.tag(math(value, true))
         this.tag('</span>')
       },
       mathTextData(token) {
