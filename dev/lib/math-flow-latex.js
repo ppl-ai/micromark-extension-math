@@ -31,6 +31,8 @@ function tokenizeMathFlowLatex(effects, ok, nok) {
     tail && tail[1].type === types.linePrefix
       ? tail[2].sliceSerialize(tail[1], true).length
       : 0
+  let contentStarted = false
+  let insideMathFlowValue = false
 
   return start
 
@@ -178,7 +180,12 @@ function tokenizeMathFlowLatex(effects, ok, nok) {
       )(code)
     }
 
-    effects.enter('mathFlowValue')
+    if (!insideMathFlowValue) {
+      effects.enter('mathFlowValue')
+      contentStarted = false
+      insideMathFlowValue = true
+    }
+
     return contentChunk(code)
   }
 
@@ -196,11 +203,52 @@ function tokenizeMathFlowLatex(effects, ok, nok) {
    */
   function contentChunk(code) {
     if (code === codes.eof || markdownLineEnding(code)) {
-      effects.exit('mathFlowValue')
+      // We should always have content here because beforeContentChunk checks
+      // for EOF/EOL before entering mathFlowValue
+      if (contentStarted) {
+        effects.exit('mathFlowValue')
+        insideMathFlowValue = false
+        contentStarted = false
+      }
+
       return beforeContentChunk(code)
     }
 
+    // Check for inline closing fence after we've consumed at least one character
+    if (code === codes.backslash && contentStarted) {
+      effects.exit('mathFlowValue')
+      insideMathFlowValue = false
+      return effects.attempt(
+        {tokenize: tokenizeClosingFence, partial: true},
+        after,
+        contentAfterFailedClose
+      )(code)
+    }
+
     effects.consume(code)
+    contentStarted = true
+    return contentChunk
+  }
+
+  /**
+   * After failed attempt to parse closing fence inline.
+   * The backslash was just content.
+   *
+   * ```markdown
+   *   | \[
+   * > | \frac{1}{2} \text{not closing}
+   *                 ^
+   *   | \]
+   * ```
+   *
+   * @type {State}
+   */
+  function contentAfterFailedClose(code) {
+    assert(code === codes.backslash, 'expected `\\`')
+    effects.enter('mathFlowValue')
+    insideMathFlowValue = true
+    effects.consume(code)
+    contentStarted = true
     return contentChunk
   }
 
@@ -282,31 +330,49 @@ function tokenizeMathFlowLatex(effects, ok, nok) {
       if (code === codes.rightSquareBracket) {
         effects.consume(code)
         effects.exit('mathFlowFenceSequence')
-        return afterClosingSequence
+        return factorySpace(effects, afterClosingSequence, types.whitespace)
       }
 
       return nok(code)
     }
 
     /**
-     * After closing fence sequence.
+     * After closing fence sequence, after optional whitespace.
      *
      * ```markdown
      *   | \[
      *   | \frac{1}{2}
-     * > | \]
+     * > | \] trailing
      *       ^
      * ```
      *
      * @type {State}
      */
     function afterClosingSequence(code) {
+      effects.exit('mathFlowFence')
+
       if (code === codes.eof || markdownLineEnding(code)) {
-        effects.exit('mathFlowFence')
         return ok(code)
       }
 
-      return nok(code)
+      // Consume trailing content on the line
+      effects.enter('mathFlowTrailing')
+      return consumeTrailing(code)
+    }
+
+    /**
+     * Consume trailing content until EOL/EOF.
+     *
+     * @type {State}
+     */
+    function consumeTrailing(code) {
+      if (code === codes.eof || markdownLineEnding(code)) {
+        effects.exit('mathFlowTrailing')
+        return ok(code)
+      }
+
+      effects.consume(code)
+      return consumeTrailing
     }
   }
 }

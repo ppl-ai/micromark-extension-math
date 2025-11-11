@@ -21,6 +21,8 @@ export const mathTextLatex = {
 function tokenizeMathTextLatex(effects, ok, nok) {
   /** @type {Token} */
   let token
+  /** @type {Token} */
+  let openToken
 
   return start
 
@@ -30,30 +32,42 @@ function tokenizeMathTextLatex(effects, ok, nok) {
    * ```markdown
    * > | \(a\)
    *     ^
+   * > | \[a\]
+   *     ^
    * ```
    *
    * @type {State}
    */
   function start(code) {
     assert(code === codes.backslash, 'expected `\\`')
-    effects.enter('mathText')
+    openToken = effects.enter('mathText')
     effects.enter('mathTextSequence')
     effects.consume(code)
-    return openParen
+    return openDelimiter
   }
 
   /**
-   * After backslash, expecting open paren.
+   * After backslash, expecting open paren or bracket.
    *
    * ```markdown
    * > | \(a\)
+   *      ^
+   * > | \[a\]
    *      ^
    * ```
    *
    * @type {State}
    */
-  function openParen(code) {
+  function openDelimiter(code) {
     if (code === codes.leftParenthesis) {
+      effects.consume(code)
+      effects.exit('mathTextSequence')
+      return between
+    }
+
+    if (code === codes.leftSquareBracket) {
+      // Mark as display mode
+      openToken.type = 'mathTextDisplay'
       effects.consume(code)
       effects.exit('mathTextSequence')
       return between
@@ -135,15 +149,22 @@ function tokenizeMathTextLatex(effects, ok, nok) {
    * ```markdown
    * > | \(a\)
    *         ^
+   * > | \[a\]
+   *         ^
    * ```
    *
    * @type {State}
    */
   function closingBackslash(code) {
-    if (code === codes.rightParenthesis) {
+    const isDisplay = openToken.type === 'mathTextDisplay'
+
+    if (
+      (isDisplay && code === codes.rightSquareBracket) ||
+      (!isDisplay && code === codes.rightParenthesis)
+    ) {
       effects.consume(code)
       effects.exit('mathTextSequence')
-      effects.exit('mathText')
+      effects.exit(openToken.type)
       return ok
     }
 

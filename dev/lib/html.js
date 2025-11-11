@@ -30,8 +30,11 @@ export function mathHtml(options) {
         this.buffer()
       },
       mathText() {
-        // Double?
         this.tag('<span class="math math-inline">')
+        this.buffer()
+      },
+      mathTextDisplay() {
+        this.tag('<span class="math math-display">')
         this.buffer()
       }
     },
@@ -54,12 +57,20 @@ export function mathHtml(options) {
       mathFlowFenceMeta() {
         this.resume()
       },
+      mathFlowTrailing() {
+        // Discard trailing content - don't include in output
+      },
       mathFlowValue(token) {
         this.raw(this.sliceSerialize(token))
       },
       mathText() {
         const value = this.resume()
         this.tag(math(value, false))
+        this.tag('</span>')
+      },
+      mathTextDisplay() {
+        const value = this.resume()
+        this.tag(math(value, true))
         this.tag('</span>')
       },
       mathTextData(token) {

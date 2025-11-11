@@ -646,4 +646,183 @@ test('math', async function (t) {
       )
     }
   )
+
+  await t.test(
+    'should support whitespace on the LaTeX-style closing fence',
+    async function () {
+      assert.equal(
+        micromark('\\[\na\n\\]  ', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support whitespace and newline after LaTeX-style closing fence',
+    async function () {
+      assert.equal(
+        micromark('\\[\na\n\\]    \n', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>\n'
+      )
+    }
+  )
+
+  await t.test(
+    'should support whitespace and newline after LaTeX-style closing fence',
+    async function () {
+      assert.equal(
+        micromark('\\[\na\n\\]    \ntest', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('a', {displayMode: true}) +
+          '</div>\n<p>test</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support inline display math with LaTeX-style delimiters \\[ \\]',
+    async function () {
+      assert.equal(
+        micromark('a \\[b\\] c', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>a <span class="math math-display">' +
+          renderToString('b', {displayMode: true}) +
+          '</span> c</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support inline display math in table cells',
+    async function () {
+      assert.equal(
+        micromark('| Column | Formula \\[x^2\\] here |', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>| Column | Formula <span class="math math-display">' +
+          renderToString('x^2', {displayMode: true}) +
+          '</span> here |</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support inline display math with complex expressions',
+    async function () {
+      assert.equal(
+        micromark('The formula \\[\\frac{a}{b}\\] is important.', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<p>The formula <span class="math math-display">' +
+          renderToString('\\frac{a}{b}', {displayMode: true}) +
+          '</span> is important.</p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should handle block display math with trailing content from LLM output',
+    async function () {
+      assert.equal(
+        micromark('\\[\n\\$1,000,000\n\\]                             |', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('\\$1,000,000', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should handle block display math with trailing whitespace after closing fence',
+    async function () {
+      assert.equal(
+        micromark('\\[\n\\big| |x| - |y| \\big| \\leq |x - y|\n\\]     ', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('\\big| |x| - |y| \\big| \\leq |x - y|', {
+            displayMode: true
+          }) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should handle backslashes in math content that are not closing fences',
+    async function () {
+      assert.equal(
+        micromark('\\[\n\\text{hello} \\alpha \\beta\n\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('\\text{hello} \\alpha \\beta', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should handle closing fence inline with content',
+    async function () {
+      assert.equal(
+        micromark('\\[\nx = 1\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('x = 1', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
+
+  await t.test('should handle math with empty lines', async function () {
+    assert.equal(
+      micromark('\\[\nx = 1\n\ny = 2\n\\]', {
+        extensions: [math()],
+        htmlExtensions: [mathHtml()]
+      }),
+      '<div class="math math-display">' +
+        renderToString('x = 1\n\ny = 2', {displayMode: true}) +
+        '</div>'
+    )
+  })
+
+  await t.test(
+    'should handle math starting with empty line',
+    async function () {
+      assert.equal(
+        micromark('\\[\n\nx = 1\n\\]', {
+          extensions: [math()],
+          htmlExtensions: [mathHtml()]
+        }),
+        '<div class="math math-display">' +
+          renderToString('\nx = 1', {displayMode: true}) +
+          '</div>'
+      )
+    }
+  )
 })

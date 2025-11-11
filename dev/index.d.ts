@@ -52,9 +52,11 @@ declare module 'micromark-util-types' {
     mathFlowFence: 'mathFlowFence'
     mathFlowFenceMeta: 'mathFlowFenceMeta'
     mathFlowFenceSequence: 'mathFlowFenceSequence'
+    mathFlowTrailing: 'mathFlowTrailing'
     mathFlowValue: 'mathFlowValue'
     mathText: 'mathText'
     mathTextData: 'mathTextData'
+    mathTextDisplay: 'mathTextDisplay'
     mathTextPadding: 'mathTextPadding'
     mathTextSequence: 'mathTextSequence'
   }
